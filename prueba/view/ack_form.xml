@@ -1,0 +1,21 @@
+<?xml version="1.0" ?>
+<form>
+    <label name="fecha"/>
+    <field name="fecha"/>
+    <label name="dedicacion"/>
+    <field name="dedicacion"/>
+    <label name="tipo_tarea"/>
+    <field name="tipo_tarea"/>
+    <label name="estado_tarea"/>
+    <field name="estado_tarea"/>
+    <label name="tecnico"/>
+    <field name="tecnico"/>
+    <label name="cliente"/>
+    <field name="cliente"/>
+    <label name="tarea"/>
+    <field name="tarea"/>
+    <label name="descripcion"/>
+    <field name="descripcion"/>
+    <label name="editor_ver"/>
+    <field name="editor_ver"/>
+</form>

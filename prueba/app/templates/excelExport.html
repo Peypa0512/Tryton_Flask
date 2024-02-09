@@ -1,0 +1,88 @@
+{% extends "base.html" %} {% block body %}
+<main>
+	<div class="row g-0 w-100 mt-4">
+		<div class="col-12">
+			<form id="excel_form" action="{{ url_for('excelExport') }}" method="POST">
+				<table class="table table-striped table-bordered table-sortable" id="parts-table">
+					<thead class="thead-dark">
+						<tr>
+							<th class="sortable both" role="button" scope="col" id="date-head">Fecha</th>
+							<th scope="col">Dedicación</th>
+							<th class="sortable both" role="button" scope="col" id="type-head">Tipo de tarea</th>
+							<th scope="col">Estado de tarea</th>
+							<th class="sortable both" role="button" id="employee-head" scope="col">Técnico</th>
+							<th class="sortable both" role="button" id="customer-head" scope="col">Cliente</th>
+							<th id="work-head" scope="col">Tarea</th>
+							<th scope="col">Descripción</th>
+							<th scope="col">Editar/Ver</th>
+
+							{% if g.employee %}
+							<th id="edit-btn-head" scope="col">Ver/Editar</th>
+							{% endif %}
+						</tr>
+					</thead>
+					<tbody>
+
+							{% for data in lines %}
+								<tr>
+									<td data-columna="Fecha" id="line_date" scope="row" style="width: 100px">{{ data.fecha }}</td>
+									<td data-columna="Dedicacion" id="line_duration" >{{ (data.dedicacion|string)[:-3] }}</td>
+									<td data-columna="Tipo Tarea" id="line_work-type" style="width: 140px">{{ data.tipo_tarea}}</td>
+									<td data-columna="Estado Tarea" id="line_status"  style="width: 140px">{{ data.estado_tarea}}</td>
+									<td data-columna="Tecnico" id="line_employee">{{ data.tecnico}}</td>
+									<td data-columna="Cliente" id="line_party" >{{ data.cliente}}</td>
+									<td data-columna="Tarea" id="line_work" >{{ data.tarea }}</td>
+									<td data-columna="Descripcion" id="line_description">{{ data.descripcion }}</td>
+									<td data-columna="Editar" id="line_internal-description">{{ data.editar_ver }}</td>
+								</tr>
+							{%endfor%}
+
+					</tbody>
+				</table>
+				<input type="hidden" name="data" id="dataInput" value="{{ dataInput}}">
+				<div class="col d-flex justify-content-center align-items-center">
+					<button type="button" onclick="sendForm()" class="btn btn-outline-success">Descargar archivo excel</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</main>
+<script>
+    function sendForm() {
+
+    // Evitar el envío automático del formulario
+    event.preventDefault();
+    var data = [];
+
+
+    var tabla = document.getElementById("parts-table");
+
+    // Verificar si la tabla es válida y tiene al menos una fila
+    if (tabla && tabla.rows.length > 0) {
+
+        for (var i = 1; i < tabla.rows.length; i++) {
+            var fila = tabla.rows[i];
+            var filadata = [];
+
+            // Iterar sobre las celdas de la fila
+            for (var j = 0; j < fila.cells.length; j++) {
+                var columnName = fila.cells[j].getAttribute("data-columna");
+                filadata.push({ [columnName]: fila.cells[j].innerText });
+            }
+
+
+            data.push(filadata);
+        }
+
+        // Asignar los data al campo oculto
+        document.getElementById("dataInput").value = JSON.stringify(data);
+        console.log("data a enviar:", JSON.stringify(data));
+
+        // Enviar el formulario
+        document.getElementById("excel_form").submit();
+    }
+}
+
+</script>
+
+{% endblock body %}

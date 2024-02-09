@@ -1,0 +1,4 @@
+trytond<6.1,>=6.0
+trytond_party<6.1,>=6.0
+
+[test]

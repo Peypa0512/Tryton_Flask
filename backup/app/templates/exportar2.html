@@ -1,0 +1,898 @@
+{% extends "base.html" %} {% block head %}
+<script src="{{ url_for('static', filename='js/jquery/jquery.js') }}"></script>
+<script src="{{ url_for('static', filename='js/jquery/autocomplete/jquery-ui.min.js') }}"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/timesheet.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='js/jquery/autocomplete/jquery-ui.min.css') }}" />
+{% endblock head %} {% block body %} {% include "nav.html" %}
+<div class="overlay position-absolute opacity-0" id="overlay" style="background:#384f8ca6;z-index:-1;">
+	<div class="popup h-50 rounded p-20 text-cente" id="popup"
+		style="background:#f8f8f8;box-shadow: 0 0 5px 0 rgb(0 0 0 / 30%);transition: .3s ease all;width: 95%;">
+		<div class="row g-0 w-100 mt-4 p-4">
+			<div class="col-12">
+				<table class="table table-striped table-bordered">
+					<thead class="thead-dark">
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+			</div>
+		</div>
+		<div class="w-100 d-flex" style="justify-content: center;gap: 2%;">
+			<button type="button" class="save-btn btn btn-outline-success">
+				<span class="glyphicon glyphicon-edit"></span>Guardar
+			</button>
+			<button type="button" class="cancel-btn btn btn-outline-success">
+				<span class="glyphicon glyphicon-edit"></span>Cancelar
+			</button>
+		</div>
+	</div>
+</div>
+<main class="container-fluid">
+	{% if g.employee %}
+	<div class="row g-0 w-100">
+		<form id="newTimesheetLine">
+			<div class="col-12 my-2 d-flex justify-content-end">
+				<button class="btn btn-outline-success">Insertar parte</button>
+			</div>
+			<div class="col-12">
+				<table class="table table-bordered">
+					<thead class="thead-dark">
+						<tr>
+							<th scope="col">Trabajo</th>
+							<th scope="col">Fecha</th>
+							<th scope="col">Dedicación</th>
+							<th scope="col">Tipo de trabajo</th>
+							<th scope="col">Estado del trabajo</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>
+								<input type="hidden" id="workId" name="workId" class="form-control" required />
+								<input type="text" id="work" name="work" class="form-control" required />
+							</td>
+							<td>
+								<input type="date" id="date" name="date" class="form-control" required />
+							</td>
+							<td>
+								<input type="time" id="time" name="time" class="form-control" required />
+							</td>
+							<td style="width:20%">
+								<select class="form-select" id="type" name="type" required>
+									{% for internal_type in internal_types %}
+									<option value="{{ internal_type[0] }}">{{ internal_type[1] }}</option>
+									{% endfor %}
+								</select>
+							</td>
+							<td>
+								<select class="form-select" id="status" name="status" required>
+									{% for status in statuses %}
+									<option value="{{ status.id }}">{{ status.name }}</option>
+									{% endfor %}
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="5">
+								<div class="input-group my-2">
+									<span class="input-group-text">Descripción</span>
+									<input type="text" id="description" name="description" class="form-control" required />
+								</div>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="5">
+								<div class="input-group my-2">
+									<span class="input-group-text">Descripción interna</span>
+									<textarea id="descriptionInternal" name="descriptionInternal" required
+										class="form-control"></textarea>
+								</div>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</form>
+	</div>
+	{% endif %}
+	<div class="row g-0 w-100 mt-4">
+		<form id="filterTimesheetLines">
+			<div class="col-12 row">
+				<div class="col-3">
+					<div class="input-group my-2">
+						<label class="input-group-text" for="from_date">Desde</label>
+						<input clearOnDoubleClick type="date" class="form-control" id="from_date" name="from_date"
+							value="{{request.args.get('from_date')}}" />
+					</div>
+				</div>
+				<div class="col-3">
+					<div class="input-group my-2">
+						<label class="input-group-text" for="to_date">Hasta</label>
+						<input clearOnDoubleClick type="date" id="to_date" name="to_date" class="form-control"
+							value="{{request.args.get('to_date')}}" />
+					</div>
+				</div>
+				{% if g.employee %}
+				<div class="col-3">
+					<div class="input-group my-2">
+						<label class="input-group-text" for="employee">Empleado</label>
+						<select class="form-select" id="employee" name="employee">
+							<option value="all">Todos</option>
+							{% for employee in employees %}
+							<option value="{{employee.id}}" {% if employee.id|string==request.args.get('employee',
+								g.employee.id)|string %}selected{%endif%}>{{ employee.rec_name }}</option>
+							{% endfor %}
+						</select>
+					</div>
+				</div>
+				<div class="col-3">
+					<div class="input-group my-2">
+						<label class="input-group-text" for="client">Cliente</label>
+						<select class="form-select" id="client" name="client">
+							<option value="all">Todos</option>
+							{% for client in clients %}
+							<option value="{{client.id}}">{{ client.name }}</option>
+							{% endfor %}
+						</select>
+					</div>
+				</div>
+				{% endif %}
+				<div class="col-3">
+					<div class="input-group my-2">
+						<label class="input-group-text" for="work-type">Tipo de tarea</label>
+						<select class="form-select" id="work-type" name="work-type">
+							<option value="all">Todos</option>
+							{% for internal_type in internal_types %}
+							{% if internal_type[0] != None %}
+							<option value="{{ internal_type[0] }}">{{ internal_type[1] }}</option>
+							{% endif %}
+							{% endfor %}
+						</select>
+					</div>
+				</div>
+				<div class="col d-flex justify-content-end align-items-center">
+					<button class="btn btn-outline-success">Filtrar</button>
+				</div>
+			</div>
+		</form>
+	</div>
+	<div class="row g-0 w-100 mt-4">
+		<div class="col-12">
+			<form action="{{url_for('exportar')}}" method="POST">
+				<div class="col d-flex justify-content-center align-items-center">
+					<button type="submit" class="btn btn-outline-success">Exportar</button>
+				</div>
+			<table class="table table-striped table-bordered table-sortable" id="parts-table">
+				<thead class="thead-dark">
+					<tr>
+						<th id="selection-state-head"><input type="checkbox" role="button" onclick="selectAllRows(this)" style="margin:10%;"></th>
+						<th class="sortable both" role="button" scope="col" id="date-head">Fecha</th>
+						<th scope="col">Dedicación</th>
+						<th class="sortable both" role="button" scope="col" id="type-head">Tipo de tarea</th>
+						<th scope="col">Estado de tarea</th>
+						<th class="sortable both" role="button" id="employee-head" scope="col">Técnico</th>
+						<th class="sortable both" role="button" id="customer-head" scope="col">Cliente</th>
+						<th id="work-head" scope="col">Tarea</th>
+						<th scope="col">Descripción</th>
+						{% if g.employee %}
+						<th id="edit-btn-head" scope="col">Ver/Editar</th>
+						{% endif %}
+					</tr>
+				</thead>
+				<tbody>
+						{%for line in lines%}
+							<tr>
+								<td class="selection-state">
+									<input type="checkbox" name="checkboxes" onclick="selectRow(this)" role="button"  style="margin:10%;"  value="{{line.id}}">
+								</td>
+								<td id="line_work-id" style="display:none;">{{ line.id }}</td>
+								<td id="line_date" scope="row" style="width: 100px">{{ line.fecha }}</td>
+								<td id="line_duration" >{{ (line.dedicacion|string)[:-3] }}</td>
+								<td id="line_work-type" style="width: 140px">{{ line.tipo_tarea}}</td>
+								<td id="line_status"  style="width: 140px">{{ line.estado_tarea}}</td>
+								<td id="line_employee">{{ line.tecnico}}</td>
+								<td id="line_party" >{{ line.cliente}}</td>
+								<td id="line_work" >{{ line.tarea }}</td>
+								<td id="line_description">{{ line.descripcion }}</td>
+								<td id="line_internal-description" style="display:none;">{{ line.editor_ver }}</td>
+								{% if g.employee %}
+								<td>
+									<button type="button" class="edit-btn btn btn-default btn-sm">
+										<span class="glyphicon glyphicon-edit"></span> Editar
+									</button>
+								</td>
+								{% endif %}
+							</tr>
+						{%endfor%}
+						<tr id="time-count" style="height: 35px;" colspan="10">
+							<td></td><td></td>
+							<td id="time-cell"></td>
+							<td></td><td></td><td></td><td></td><td></td><td></td>
+							{% if g.employee %}
+							<td></td>
+							{% endif %}
+						</tr>
+
+				</tbody>
+			</table>
+			</form>
+		</div>
+	</div>
+</main>
+{% endblock body %} {% block scripts %}
+<script>
+	/////////////// line insertion and filtering ///////////////
+	const autocomplete = (type) => {
+		$('input#' + type, ).autocomplete({
+			source: async (request, response) => {
+				const _response = await fetch('/api/timesheet/works', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify(request),
+				}).catch((err) => {
+					console.log(err)
+				})
+
+				if (_response?.ok) {
+					const works = await _response.json().catch(() => [])
+					response(works)
+				} else {
+					response([])
+				}
+			},
+			select: async (event, ui) => {
+				event.target.value = ui.item.name
+				event.target.closest('td').querySelector('input[name="workId"]').value = ui.item.id
+				event.target.closest('tbody').querySelector(`#status option[value="${ui.item.status}"`).selected = true
+				event.target.closest('tbody').querySelector(`#type option[value="${ui.item.type.split(' ')[0]}"`).selected = true
+			},
+		})
+	}
+
+	const initialize = () => {
+		const newTimesheetLine = document.getElementById('newTimesheetLine')
+
+		// Only if there's an employee
+		if(newTimesheetLine) {
+			const descriptionInternalTextarea = newTimesheetLine.querySelector('#descriptionInternal')
+			const updateTextareaHeight = () => {
+				descriptionInternalTextarea.style.height = descriptionInternalTextarea.scrollHeight + 'px'
+			}
+			updateTextareaHeight()
+
+			const onSubmitNewTimesheetLine = async (e) => {
+				e.preventDefault()
+				const form = e.target
+
+				const workId = form.querySelector('#workId').value
+				const work = form.querySelector('#work').value
+				const date = form.querySelector('#date').value
+				const time = form.querySelector('#time').value
+				const internal_type = form.querySelector('#type').value
+				const description = form.querySelector('#description').value
+				const descriptionInternal = form.querySelector('#descriptionInternal').value
+				const status = form.querySelector('#status').value
+
+				const response = await fetch('/api/timesheet/line/create', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({
+						workId,
+						work,
+						date,
+						time,
+						internal_type,
+						description,
+						descriptionInternal,
+						status,
+					}),
+				})
+
+				if (response?.ok) {
+					location.reload()
+					// const html = await response.text()
+					// const parser = new DOMParser()
+					// const doc = parser.parseFromString(html, 'text/html')
+					// const thisMain = document.querySelector('main')
+					// thisMain.innerHTML = doc.querySelector('main').innerHTML
+					// initialize()
+				}
+			}
+
+			newTimesheetLine.addEventListener('submit', onSubmitNewTimesheetLine)
+		}
+
+		const filterTimesheetLines = document.getElementById('filterTimesheetLines')
+
+		const onSubmitFilterTimesheetLines = async (e) => {
+			e.preventDefault()
+			const form = e.target
+
+			const fromDate = form.querySelector('#from_date').value
+			const toDate = form.querySelector('#to_date').value
+			const employeeInput = form.querySelector('#employee')
+			const clientInput = form.querySelector('#client')
+			const workTypeInput = form.querySelector('#work-type')
+			let employee, client, work_type
+			if (employeeInput) {
+				employee = employeeInput.value
+			}
+			if (clientInput) {
+				client = clientInput.value
+			}
+
+			if (workTypeInput) {
+				work_type = workTypeInput.value
+			}
+
+			const _url = '/timesheet'
+			const _params = {
+				from_date: fromDate,
+				to_date: toDate,
+				...(employee) && {employee},
+  				...(client) && {client},
+				work_type,
+			}
+
+			const urlParams = new URLSearchParams(_params)
+
+			window.location.href = `${_url}?${urlParams}`
+
+			/*if (response?.ok) {
+				const html = await response.text()
+				const parser = new DOMParser()
+				const doc = parser.parseFromString(html, 'text/html')
+				const thisMain = document.querySelector('main')
+				thisMain.innerHTML = doc.querySelector('main').innerHTML
+				initialize()
+
+				document.querySelector('#from_date').value = fromDate
+				document.querySelector('#to_date').value = toDate
+
+				setClearOnDoubleClick()
+			} */
+		}
+
+		filterTimesheetLines.addEventListener('submit', onSubmitFilterTimesheetLines)
+
+		autocomplete('work')
+	}
+	initialize()
+
+	/////////////// line sorting ///////////////
+	const sortTableByColumn = (table, type, btn_type) => {
+		const table_body = table.tBodies[0]
+		let rows_to_sort = table_body.rows
+
+		const time_row = rows_to_sort[rows_to_sort.length - 1]
+		time_row.parentNode.removeChild(time_row)
+
+		// console.log('rows_to_sort', rows_to_sort)
+
+		const original_positions = []
+		for (idx = 0; idx < table_body.rows.length; idx++) {
+			original_positions.push(table_body.rows[idx].children[0].innerHTML)
+		}
+		// console.log(original_positions)
+
+		for (idx = 0; idx < rows_to_sort.length; idx++) {
+			// console.log('>>>>>>>>>>>>>>>>>>>>>>> MAIN ROW index: ', idx)
+			const current_row_id = original_positions[idx]
+
+			for (idx_2 = 0; idx_2 < rows_to_sort.length; idx_2++) {
+				const row = rows_to_sort[idx_2]
+				const next_row = rows_to_sort[idx_2 + 1]
+				if(row.children[0].innerHTML === current_row_id) {
+
+					let cell_value = null
+					let current_other_cell_value = null
+
+					for (idx_3 = 0; idx_3 < rows_to_sort.length; idx_3++) {
+						// console.log('secondary row index in loop: ', idx_3)
+
+						const current_other_row = rows_to_sort[idx_3]
+
+						// console.log('the row', row)
+						// console.log('the current_other_row', current_other_row)
+
+						if(row !== current_other_row) {
+							// console.log('---- not the same row ----')
+							if(btn_type === 'date-head') {
+								cell_value = row.cells[4].innerText
+								current_other_cell_value = current_other_row.cells[4].innerText
+							}
+							else if(btn_type === 'type-head') {
+								cell_value = row.cells[6].innerText
+								current_other_cell_value = current_other_row.cells[6].innerText
+							}
+							else if(btn_type === 'employee-head') {
+								cell_value = row.cells[8].innerText
+								current_other_cell_value = current_other_row.cells[8].innerText
+							}
+							else if(btn_type === 'customer-head') {
+								cell_value = row.cells[9].innerText
+								current_other_cell_value = current_other_row.cells[9].innerText
+							}
+
+							if(type === 'ASC') {
+								// console.log('************** sorting in asc')
+								if(cell_value > current_other_cell_value) {
+									// console.log('bigger than next', cell_value, '>=', current_other_cell_value)
+									current_other_row.parentElement.insertBefore(row, current_other_row.nextElementSibling)
+								}
+								else {
+									// If I'm above add row before
+									if(idx_3 < idx) {
+										current_other_row.parentElement.insertBefore(row, current_other_row)
+										break
+									}
+									else { break }
+								}
+							}
+							else if(type === 'DESC') {
+								// console.log('************** sorting in desc')
+								if(cell_value < current_other_cell_value) {
+									// console.log('smaller than next', cell_value, '<=', current_other_cell_value)
+									current_other_row.parentElement.insertBefore(row, current_other_row.nextElementSibling)
+								}
+								else {
+									// If I'm above add row before
+									if(idx_3 < idx) {
+										current_other_row.parentElement.insertBefore(row, current_other_row)
+										break
+									}
+									else { break }
+								}
+							}
+						}
+					}
+					break
+				}
+			}
+
+			// console.log('one row sorting done, counter in: ', idx)
+			if(idx === (rows_to_sort.length - 1)) {
+				// console.log('the end')
+				table_body.appendChild(time_row)
+				break
+			}
+		}
+	}
+
+	const setSortingEvents = () => {
+		const parts_table = document.getElementById('parts-table')
+		const sortableHeadCells = parts_table.querySelectorAll('.sortable')
+
+		sortableHeadCells.forEach(bnt => {
+			bnt.addEventListener('click', function handleClick(event) {
+				btn_type = this.id
+				let target = event.target
+
+				if (target.classList.contains('both') || target.classList.contains('desc')) {
+					target.classList.add('asc')
+					target.classList.remove('desc')
+					target.classList.remove('both')
+					sortTableByColumn(parts_table, 'ASC', btn_type)
+				}
+				else if (target.classList.contains('asc')) {
+					target.classList.add('desc')
+					target.classList.remove('asc')
+					sortTableByColumn(parts_table, 'DESC', btn_type)
+				}
+			})
+		})
+	}
+	setSortingEvents()
+
+	/////////////// line edition ///////////////
+	const getWorkTypes = async (line_id) => {
+		const response = await fetch('/api/timesheet/work-types/' + line_id)
+		if (response?.ok) {
+			return response.json()
+		}
+	}
+
+	const setPopupDetails = () => {
+
+		let overlay = document.getElementById('overlay')
+		let table_header_set = false
+
+		document.querySelectorAll('.edit-btn').forEach(bnt => {
+
+			bnt.addEventListener('click', function handleClick(event) {
+				const tbody = this.parentNode.parentNode
+				const table_head_tr = tbody.parentNode.previousElementSibling.querySelector('tr')
+
+				const clone = (tbody).cloneNode(true)
+				const table_head_tr_clone = table_head_tr.cloneNode(true)
+				clone.querySelector('.selection-state').remove()
+				table_head_tr_clone.querySelector('#selection-state-head').remove()
+				table_head_tr_clone.querySelector('#employee-head').remove()
+				table_head_tr_clone.querySelector('#customer-head').remove()
+				table_head_tr_clone.querySelector('#edit-btn-head').remove()
+				table_head_tr_clone.querySelector('#work-head').remove()
+
+				document.getElementById('popup').getElementsByTagName('tbody')[0].appendChild(clone)
+				document.getElementById('popup').getElementsByTagName('thead')[0].appendChild(table_head_tr_clone)
+
+				const workStatusId = parseInt(clone.getAttribute('work-status') ?? '')
+
+				let tds_obj = {}
+				let tds = document.getElementById('popup').getElementsByTagName('tbody')[0].getElementsByTagName('td')
+
+				for (index = 0; index < tds.length; ++index) {
+
+					let editable_cell = null
+					let cell = tds[index]
+
+					// Input type cells
+					if(cell.id === 'line_full-work' || cell.id === 'line_duration' || cell.id === 'line_date') {
+						editable_cell = document.createElement('input')
+						editable_cell.type = 'text'
+						editable_cell.value = cell.innerHTML
+					}
+
+					// Select type cells
+					if(cell.id === 'line_status' || cell.id === 'line_work-type') {
+						editable_cell = document.createElement('select')
+						editable_cell.classList.add("form-select")
+						editable_cell.id = "status"
+						editable_cell.name = "status"
+						editable_cell.required = true
+
+						idx = 0
+						if(cell.id === 'line_status') {
+							cell.style = "display: table-cell;width: 170px;"
+							while (idx < 3) {
+								const option_el = document.createElement('option')
+								if(idx === 0){
+									option_el.value = 1
+									option_el.innerHTML = 'Abierto'
+									option_el.selected = parseInt(option_el.value) === workStatusId
+								}
+								else if(idx === 1){
+									option_el.value = 3
+									option_el.innerHTML = 'Planificado'
+									option_el.selected = parseInt(option_el.value) === workStatusId
+								}
+								else if(idx === 2){
+									option_el.value = 2
+									option_el.innerHTML = 'Finalizado'
+									option_el.selected = parseInt(option_el.value) === workStatusId
+								}
+								editable_cell.appendChild(option_el)
+								idx++
+							}
+						}
+						else if(cell.id === 'line_work-type') {
+
+							const default_work_type = cell.innerHTML
+							line_id = this.closest('tr').querySelector('#line-id').innerText
+
+							getWorkTypes(line_id).then(res => {
+								for (let index = 1; index < res.length; index++) {
+									const option_el = document.createElement('option')
+									option_el.value = res[index][0]
+									option_el.innerHTML = res[index][1]
+									option_el.selected = res[index][1] === default_work_type
+									editable_cell.appendChild(option_el)
+								}
+							})
+						}
+					}
+
+					// Textarea type cells
+					else if(cell.id === 'line_description' || cell.id === 'line_internal-description') {
+						editable_cell = document.createElement('textarea')
+						editable_cell.value = cell.innerHTML
+					}
+
+					if(editable_cell) {
+						editable_cell.classList.add("w-100", "form-control", "ui-autocomplete-input")
+						cell.innerText = ''
+
+						if(cell.id === 'line_date') {
+							editable_cell.type = "date"
+							editable_cell.id = "date"
+							editable_cell.name = "date"
+						}
+
+						cell.appendChild(editable_cell)
+					}
+
+					// Add display style for work and internal description hidden inputs that come to life
+					if (cell.id === 'line_work' || cell.id === 'line_internal-description') {
+						cell.style = 'display: table-cell;'
+					}
+
+					// Add display style work state hidden input that comes to life
+					if(cell.id === 'line_full-work') {
+						cell.style = "display: table-cell;width: 170px;"
+						editable_cell.id = 'work'
+					}
+
+					// Hide employee and work column
+					if(cell.id === 'line_employee' || cell.id === 'line_work') {
+						cell.style = 'display: none;'
+					}
+
+					// Hide client column
+					if (cell.id === 'line_party') {
+						cell.style = 'display: none;'
+					}
+
+					// Remove line edit btn
+					if (index === (tds.length - 1)) {
+						cell.remove()
+					}
+				}
+
+				if(!table_header_set) {
+					// Add trs for work and internal description hidden inputs that come to life
+					let new_internal_work_th = document.createElement('th')
+					new_internal_work_th.scope = "col"
+					new_internal_work_th.innerHTML = "Trabajo"
+					table_head_tr_clone.prepend(new_internal_work_th)
+
+					let new_internal_description_th = document.createElement('th')
+					new_internal_description_th.scope = "col"
+					new_internal_description_th.innerHTML = "Descripción interna"
+					table_head_tr_clone.appendChild(new_internal_description_th)
+				}
+				table_header_set = true
+
+				overlay.classList.remove('opacity-0')
+				overlay.classList.add('opacity-100')
+				overlay.style.cssText = `
+					background: #384f8ca6;
+					z-index:10;
+					display: flex;
+					justify-content: center;
+					align-items: center;
+					width: 100%;
+					height: 100vh;
+				`
+				overlay.scrollIntoView({
+					block: "start"
+				})
+
+				document.querySelector('body').classList.toggle('overflow-hidden')
+
+				autocomplete('work')
+			})
+		})
+
+		document.querySelector('.cancel-btn').addEventListener('click', function handleClick(event) {
+			overlay.classList.add('opacity-0')
+			overlay.classList.remove('opacity-100')
+			overlay.style.cssText = `z-index:-1;`
+			document.querySelector('body').classList.toggle('overflow-hidden')
+			document.getElementById('popup').getElementsByTagName('tbody')[0].textContent = ''
+			document.getElementById('popup').getElementsByTagName('thead')[0].textContent = ''
+			table_header_set = false
+		})
+
+		document.querySelector('.save-btn').addEventListener('click', function handleClick(event) {
+			overlay.classList.add('opacity-0')
+			overlay.classList.remove('opacity-100')
+			overlay.style.cssText = `z-index:-1;`
+			document.querySelector('body').classList.toggle('overflow-hidden')
+
+			const tbody = document.getElementById('popup').getElementsByTagName('tbody')[0],
+			data_for_update = []
+
+			for (i = 0; i < tbody.children[0].children.length; ++i) {
+				if(!tbody.children[0].children[i].children.length > 0) {
+					data_for_update[data_for_update.length] = tbody.children[0].children[i].innerHTML
+				}
+				else {
+					data_for_update[data_for_update.length] = tbody.children[0].children[i].children[0].value
+				}
+			}
+
+			onSubmitEditedTimesheetLine(data_for_update).then((value) => {
+				tbody.textContent = ''
+			})
+		})
+
+		const onSubmitEditedTimesheetLine = async (data_for_update) => {
+			// e.preventDefault()
+
+			console.log('data_for_update', data_for_update)
+			const lineId = data_for_update[0]
+			const workId = data_for_update[1]
+			const work = data_for_update[2]
+			const date = data_for_update[3]
+			const time = data_for_update[4]
+			const internalType = data_for_update[5]
+			const status = data_for_update[6]
+			const employee = data_for_update[7]
+			const description = data_for_update[10]
+			const descriptionInternal = data_for_update[11]
+			const queryString = window.location.search
+
+			const response = await fetch('/api/timesheet/line/update/' + lineId, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					workId,
+					work,
+					status,
+					date,
+					time,
+					internalType,
+					employee,
+					description,
+					descriptionInternal,
+					queryString,
+				}),
+			})
+
+			if (response?.ok) {
+				location.reload()
+			}
+		}
+	}
+	setPopupDetails()
+
+	/////////////// line total times calculations ///////////////
+	const minutesToHoursAndMinutes = (minutes) => {
+		const separator = ':'
+		if (minutes <= 59) {
+			if(String(minutes).length === 1) {
+				minutes = '0' + minutes
+			}
+			return String('00' + separator + minutes)
+		}
+
+		let hours_from_mins = String(minutes / 60).split('.')[0]
+		let mins_left = String(minutes % 60)
+		if(mins_left.length === 1) {
+			mins_left = '0' + mins_left
+		}
+		return hours_from_mins + separator + mins_left
+	}
+
+	const setTimeCount = () => {
+		const table = document.getElementById('parts-table'),
+		time_row = document.getElementById('time-count'),
+		time_cell = time_row.querySelector('#time-cell'),
+		table_body_rows = table.tBodies[0].rows
+
+		// 5:00 to M S D H
+		let total_hours = 0, total_minutes = 0
+
+		for (let i=0; i < (table_body_rows.length - 1); i++) {
+			// console.log(table_body_rows[i].querySelector('#line_duration').innerHTML)
+			if(table_body_rows[i]) {
+				const time = table_body_rows[i].querySelector('#line_duration').innerHTML
+				let hours = time.split(':')[0], minutes = time.split(':')[1]
+
+				total_hours += parseInt(hours)
+				total_minutes += parseInt(minutes)
+			}
+		}
+
+		if(total_minutes === 0) {
+			total_minutes = '00'
+		}
+
+		const returned_hours = minutesToHoursAndMinutes(total_minutes).split(':')[0]
+		const returned_minutes = minutesToHoursAndMinutes(total_minutes).split(':')[1]
+
+		let total_sum_hours = String(total_hours + parseInt(returned_hours))
+		if(total_sum_hours.length === 1) {
+			total_sum_hours = '0' + total_sum_hours
+		}
+
+		const total_sum = String(total_sum_hours + ':' + returned_minutes)
+		document.getElementById('time-cell').innerHTML = '00:00 / ' + total_sum
+	}
+	setTimeCount()
+
+	const selectAllRows = (master_check_input) => {
+		const table = document.getElementById('parts-table'),
+		table_body_rows = table.tBodies[0].rows,
+		master_check_state = master_check_input.checked
+
+		for (let i=0; i < (table_body_rows.length - 1); i++) {
+			if(table_body_rows[i]) {
+				if(master_check_state) {
+					table_body_rows[i].style = 'background-color: #c7e6ff;'
+					check_input = table_body_rows[i].querySelector('.selection-state').childNodes[1]
+					if(!check_input.checked) {
+						check_input.checked = 1
+					}
+				}
+				else {
+					table_body_rows[i].style = 'background-color: unset;'
+					check_input = table_body_rows[i].querySelector('.selection-state').childNodes[1]
+					if(check_input.checked) {
+						check_input.checked = 0
+					}
+				}
+			}
+		}
+
+		const time_cell = document.getElementById('time-cell'),
+		existing_rows_total = time_cell.innerHTML.split(' /')[1]
+
+		if(master_check_state) {
+			time_cell.innerHTML = existing_rows_total + ' / ' + existing_rows_total
+		}
+		else {
+			time_cell.innerHTML = '00:00' + ' / ' + existing_rows_total
+		}
+	}
+
+	const setTimeCountForSelected = (operation, row_time_value) => {
+		const checked_rows_total = document.getElementById('time-cell').innerHTML.split(' /')[0]
+		const existing_rows_total = document.getElementById('time-cell').innerHTML.split(' /')[1]
+		const existing_hours = checked_rows_total.split(':')[0], existing_minutes = checked_rows_total.split(':')[1]
+		const incoming_hours = row_time_value.split(':')[0], incoming_minutes = row_time_value.split(':')[1]
+
+		let total_hours = 0, total_minutes = 0, more_minutes_than_existing = false
+		const incoming_minutes_integer = parseInt(incoming_minutes),
+		existing_minutes_integer = parseInt(existing_minutes),
+		incoming_hours_integer = parseInt(incoming_hours),
+		existing_hours_integer = parseInt(existing_hours)
+
+		if(operation == 'add') {
+			total_hours = existing_hours_integer + incoming_hours_integer
+			total_minutes = existing_minutes_integer + incoming_minutes_integer
+		}
+		else if(operation == 'substract') {
+			total_hours = existing_hours_integer - incoming_hours_integer
+
+			if(existing_minutes_integer < incoming_minutes_integer) {
+				more_minutes_than_existing = true
+				total_minutes = 60 - (incoming_minutes_integer - existing_minutes_integer)
+			}
+			else {
+				total_minutes = existing_minutes_integer - incoming_minutes_integer
+			}
+		}
+
+		const returned_hours = minutesToHoursAndMinutes(total_minutes).split(':')[0]
+		let returned_minutes = minutesToHoursAndMinutes(total_minutes).split(':')[1]
+
+		let total_sum_hours = total_hours + parseInt(returned_hours)
+		if(returned_minutes < 0) {
+			total_sum_hours = total_sum_hours - 1
+			returned_minutes = returned_minutes.split('-')[1]
+		}
+		if(more_minutes_than_existing) {
+			total_sum_hours = total_sum_hours - 1
+		}
+
+		total_sum_hours = String(total_sum_hours)
+
+		if(total_sum_hours.length === 1) {
+			total_sum_hours = '0' + (total_sum_hours)
+		}
+
+		const final_result = String(total_sum_hours + ':' + returned_minutes)
+		document.getElementById('time-cell').innerHTML = final_result + ' / ' + existing_rows_total
+	}
+
+	const selectRow = (check_input) => {
+		const input_tr = check_input.parentNode.parentNode,
+		row_time_value = input_tr.querySelector('#line_duration').innerHTML
+		if(check_input.checked) {
+			input_tr.style = 'background-color: #c7e6ff;'
+			setTimeCountForSelected('add', row_time_value)
+		}
+		else {
+			input_tr.style = 'background-color: unset;'
+			setTimeCountForSelected('substract', row_time_value)
+		}
+	}
+
+</script>
+{% endblock scripts %}

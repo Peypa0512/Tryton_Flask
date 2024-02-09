@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous" />
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.2/font/bootstrap-icons.css" />
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2" crossorigin="anonymous"></script>
+		<script defer src="{{ url_for('static', filename='js/base.js') }}"></script>
+		<script src="https://cdn.jsdelivr.net/npm/pikaday/pikaday.js"></script>
+		<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/pikaday/css/pikaday.css">
+		<script src="https://cdn.jsdelivr.net/npm/simplepicker@2.0.4/dist/simplepicker.js"></script>
+		<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/simplepicker@2.0.4/dist/simplepicker.css">
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+		<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+		<title>INGSYS :: Gestión de proyectos</title>
+
+		<link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}" />
+		{% block head %}{% endblock %}
+	</head>
+	<body class="position-relative">
+		{% block body %}{% endblock %}
+	</body>
+	<script>
+		window.addEventListener('DOMContentLoaded', function () {
+			const endpoint = '{{ request.endpoint }}'
+			const navbarLinks = document.querySelectorAll('[data-endpoint]')
+			navbarLinks.forEach(function (link) {
+				link.classList.remove('active')
+				if (link.getAttribute('data-endpoint') === endpoint) {
+					link.classList.add('active')
+				}
+			})
+		})
+	</script>
+	{% block scripts %}{% endblock %}
+</html>

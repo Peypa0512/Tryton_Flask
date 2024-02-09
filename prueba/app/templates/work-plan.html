@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/work-plan.css') }}">
+{% endblock head %}
+{% block body %}
+
+	<div class="row g-0 w-100">
+		<div class="col-12">
+			<table class="table align-middle">
+				<thead>
+					<tr>
+						<th>Cliente</th>
+						<th>Empleado</th>
+						<th>Nombre</th>
+						<th>Planificación</th>
+						<th>Tipo</th>
+						<th>Prioridad</th>
+						<th>Tiempo</th>
+						<th>Dedicación</th>
+						<th>Estado</th>
+					</tr>
+				</thead>
+				<tbody>
+                    Estoy por aqui
+
+                            {# Assuming prueba is a list of objects with the specified fields #}
+                            {% for line in prueba %}
+                            <tr>
+                                <td id="line_date" scope="row">{{ line.fecha }}</td>
+                                <td id="line_duration">{{ (line.dedicacion|string)[:-3] }}</td>
+                                <td id="line_work-type" style="width:120px;">{{ line.tipo_tarea }}</td>
+                                <td id="line_status" style="width:140px;">{{ line.estado_tarea }}</td>
+                                <td id="line_employee">{{ line.tecnico }}</td>
+                                <td id="line_party">{{ line.cliente }}</td>
+                                <td id="line_description">{{ line.descripcion }}</td>
+                                <td id="line_internal-description" style="display:none;">{{ line.editor_ver }}</td>
+                            </tr>
+                            {% endfor %}
+
+
+
+
+				</tbody>
+			</table>
+		</div>
+	</div>
+
+</main>
+{% endblock %} {% block scripts %}
+<script src="{{ url_for('static', filename='js/work-plan.js') }}"></script>
+<script>
+
+	const setEventsForDurations = (duration_span_type) => {
+		document.querySelectorAll(duration_span_type).forEach(bnt => {
+			if(bnt.innerHTML != '-') {
+				bnt.addEventListener('click', function handleClick(event) {
+					const timesheet_lines_inputs = event.target.parentNode.parentNode.nextElementSibling
+
+					let index = 0, clone = null
+					const popup = document.getElementById('popup-table-div')
+					for (let td of timesheet_lines_inputs.children) {
+						index++
+
+						if (index === 1) {
+							clone = (td.children[0]).cloneNode(true)
+							popup.appendChild(clone)
+						}
+						else {
+							console.log((td.children[0].querySelector('tbody').children[0]))
+							clone = (td.children[0].querySelector('tbody').children[0]).cloneNode(true)
+							console.log('popup.querySelector(tbody)', popup.querySelector('tbody'))
+							const body = popup.querySelector('tbody')
+							body.appendChild(clone)
+						}
+
+						clone.style = "inline-table"
+						clone.childNodes.forEach(input => {
+							input.readOnly = true
+						})
+					}
+
+					overlay.classList.remove('opacity-0')
+					overlay.classList.add('opacity-100')
+					overlay.style.cssText = `
+						background: #384f8ca6;
+						z-index:10;
+						display: flex;
+						justify-content: center;
+						align-items: center;
+						width: 100%;
+						height: 100vh;
+					`
+					overlay.scrollIntoView({
+						block: "start"
+					})
+				})
+			}
+		})
+	}
+	setEventsForDurations('.duration-span')
+
+	document.querySelector('.cancel-btn').addEventListener('click', function handleClick(event) {
+		overlay.classList.add('opacity-0')
+		overlay.classList.remove('opacity-100')
+		overlay.style.cssText = `z-index:-1;`
+		document.getElementById('popup-table-div').textContent = ''
+		overlay.scrollIntoView({
+			block: "start"
+		})
+	})
+
+    let picker = new Pikaday({
+		field: document.getElementById('datepicker'),
+		firstDay: 1,
+		i18n: {
+			previousMonth : 'Anterior',
+			nextMonth     : 'Siguiente',
+			months        : ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
+			weekdays      : ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'],
+			weekdaysShort : ['Dom','Lun','Mar','Mie','Jue','Vie','Sáb']
+		},
+		onSelect: function(date) {
+
+			const currentYear = date.getFullYear()
+			const currentMonth = date.getMonth() + 1
+			const currentDay = date.getDate()
+
+			const oneJan = new Date(currentYear, 0, 1)
+			const numberOfDays = Math.floor((date - oneJan) / (24 * 60 * 60 * 1000))
+			const currentWeek = Math.ceil(( date.getDay() + numberOfDays) / 7)
+
+			console.log(`The week number of the current date (${date}) is ${currentWeek}.`)
+			document.getElementById('datepicker').value = 'Semana nº ' + currentWeek
+
+			const data = {
+				"year" : currentYear ,
+				"month" : currentMonth,
+				"day" : currentDay,
+		 	}
+
+			const { origin } = window.location
+			let url = new URL(`${origin}/work-plan`)
+			for (let key in data) {
+				url.searchParams.append(key, data[key])
+			}
+
+			window.location.href = url
+    	},
+		// showWeekNumber: true
+	})
+
+		const selectWeek = (diff) => {
+
+			let curDate = (new Date())
+
+
+			let urlParam = new URLSearchParams(window.location.search)
+
+			if (urlParam.has('day')) {
+				curDate = new Date(parseInt(urlParam.get('year')),parseInt(urlParam.get('month'))-1,parseInt(urlParam.get('day')))
+
+			}
+
+			let date = addDays(curDate,diff*7)
+
+			let currentYear = date.getFullYear()
+			let currentMonth = date.getMonth() + 1
+			let currentDay = date.getDate()
+
+			let oneJan = new Date(currentYear, 0, 1)
+			let numberOfDays = Math.floor((date - oneJan) / (24 * 60 * 60 * 1000))
+			let currentWeek = Math.ceil(( date.getDay() + numberOfDays) / 7)
+			document.getElementById('datepicker').value = 'Semana nº ' + currentWeek
+			const data = {
+				"year" : currentYear ,
+				"month" : currentMonth,
+				"day" : currentDay,
+		 	}
+			const { origin } = window.location
+			let url = new URL(`${origin}/work-plan`)
+			for (let key in data) {
+				url.searchParams.set(key, data[key])
+			}
+
+			window.location.href = url
+
+		}
+
+	function addDays(date, days) {
+  		date.setDate(date.getDate() + days);
+  		return date;
+	}
+</script>
+{% endblock %}

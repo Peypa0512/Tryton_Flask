@@ -1,0 +1,12 @@
+<?xml version="1.0" ?>
+<tree>
+    <field name="fecha"/>
+    <field name="dedicacion"/>
+    <field name="tipo_tarea"/>
+    <field name="estado_tarea"/>
+    <field name="tecnico"/>
+    <field name="cliente"/>
+    <field name="tarea"/>
+    <field name="descripcion"/>
+    <field name="editor_ver"/>
+</tree>

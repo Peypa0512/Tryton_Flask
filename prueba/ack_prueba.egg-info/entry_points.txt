@@ -1,0 +1,4 @@
+
+    [trytond.modules]
+    prueba = trytond.modules.prueba
+    

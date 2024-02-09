@@ -1,0 +1,89 @@
+{% extends "base.html" %} {% block body %}
+<main>
+	<div class="row g-0 w-100 mt-4">
+		<div class="col-12">
+			<form id="formulario" action="{{ url_for('exportar_excel') }}" method="POST">
+				<table class="table table-striped table-bordered table-sortable" id="parts-table">
+					<thead class="thead-dark">
+						<tr>
+							<th class="sortable both" role="button" scope="col" id="date-head">Fecha</th>
+							<th scope="col">Dedicación</th>
+							<th class="sortable both" role="button" scope="col" id="type-head">Tipo de tarea</th>
+							<th scope="col">Estado de tarea</th>
+							<th class="sortable both" role="button" id="employee-head" scope="col">Técnico</th>
+							<th class="sortable both" role="button" id="customer-head" scope="col">Cliente</th>
+							<th id="work-head" scope="col">Tarea</th>
+							<th scope="col">Descripción</th>
+							<th scope="col">Editar/Ver</th>
+
+							{% if g.employee %}
+							<th id="edit-btn-head" scope="col">Ver/Editar</th>
+							{% endif %}
+						</tr>
+					</thead>
+					<tbody>
+							{%for pruebas in prueba%}
+							{% for valor in pruebas %}
+								<tr>
+
+									<td data-columna="Fecha" id="line_date" scope="row" style="width: 100px">{{ valor.fecha }}</td>
+									<td data-columna="Dedicacion" id="line_duration" >{{ (valor.dedicacion|string)[:-3] }}</td>
+									<td data-columna="Tipo Tarea" id="line_work-type" style="width: 140px">{{ valor.tipo_tarea}}</td>
+									<td data-columna="Estado Tarea" id="line_status"  style="width: 140px">{{ valor.estado_tarea}}</td>
+									<td data-columna="Tecnico" id="line_employee">{{ valor.tecnico}}</td>
+									<td data-columna="Cliente" id="line_party" >{{ valor.cliente}}</td>
+									<td data-columna="Tarea" id="line_work" >{{ valor.tarea }}</td>
+									<td data-columna="Descripcion" id="line_description">{{ valor.descripcion }}</td>
+									<td data-columna="Editar" id="line_internal-description">{{ valor.editor_ver }}</td>
+								</tr>
+							{%endfor%}
+							{%endfor%}
+					</tbody>
+				</table>
+				<input type="hidden" name="datos" id="datosInput" value="{{ datosInput}}">
+				<div class="col d-flex justify-content-center align-items-center">
+					<button type="button" onclick="enviarFormulario()" class="btn btn-outline-success">Exportar</button>
+				</div>
+			</form>
+		</div>
+	</div>
+
+<script>
+    function enviarFormulario() {
+    console.log("Formulario enviado");
+    // Evitar el envío automático del formulario
+    event.preventDefault();
+    var datos = [];
+
+    // Obtener datos de la tabla
+    var tabla = document.getElementById("parts-table");
+
+    // Verificar si la tabla es válida y tiene al menos una fila
+    if (tabla && tabla.rows.length > 0) {
+        // Iterar sobre las filas de la tabla
+        for (var i = 1; i < tabla.rows.length; i++) {
+            var fila = tabla.rows[i];
+            var filaDatos = [];
+
+            // Iterar sobre las celdas de la fila
+            for (var j = 0; j < fila.cells.length; j++) {
+                var nombreColumna = fila.cells[j].getAttribute("data-columna");
+                filaDatos.push({ [nombreColumna]: fila.cells[j].innerText });
+            }
+
+            // Agregar la fila de datos a la lista
+            datos.push(filaDatos);
+        }
+
+        // Asignar los datos al campo oculto
+        document.getElementById("datosInput").value = JSON.stringify(datos);
+        console.log("Datos a enviar:", JSON.stringify(datos));
+
+        // Enviar el formulario
+        document.getElementById("formulario").submit();
+    }
+}
+
+</script>
+</main>
+{% endblock body %}

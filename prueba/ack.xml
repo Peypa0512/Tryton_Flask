@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+<tryton>
+    <data>
+        <record model="res.group" id="group_ack_admin">
+            <field name="name">Ack Administracion</field>
+        </record>
+        <record model="res.user-res.group" id="user_admin_group_ack_admin">
+            <field name="user" ref="res.user_admin"/>
+            <field name="group" ref="group_ack_admin"/>
+        </record>
+        <record model="res.group" id="group_ack">
+            <field name="name">ACK</field>
+        </record>
+        <record model="res.user-res.group" id="user_admin_group_ack">
+            <field name="user" ref="res.user_admin"/>
+            <field name="group" ref="group_ack"/>
+        </record>
+
+        <menuitem name="ACK" sequence="3" id="menu_ack"/>
+
+        <record model="ir.ui.view" id="ack_view_form">
+            <field name="model">ack.prueba</field>
+            <field name="type">form</field>
+            <field name="name">ack_form</field>
+        </record>
+        <record model="ir.ui.view" id="ack_view_list">
+            <field name="model">ack.prueba</field>
+            <field name="type">tree</field>
+            <field name="name">ack_list</field>
+        </record>
+        <!-- acciones -->
+        <record model="ir.action.act_window" id="act_ack_form">
+            <field name="name">Tabla_prueba</field>
+            <field name="res_model">ack.prueba</field>
+        </record>
+        <record model="ir.action.act_window.view" id="act_ack_form_view1">
+            <field name="sequence" eval="10"/>
+            <field name="view" ref="ack_view_list"/>
+            <field name="act_window" ref="act_ack_form"/>
+        </record>
+        <record model="ir.action.act_window.view" id="act_ack_form_view2">
+            <field name="sequence" eval="20"/>
+            <field name="view" ref="ack_view_form"/>
+            <field name="act_window" ref="act_ack_form"/>
+        </record>
+        <menuitem parent="menu_ack" action="act_ack_form" sequence="10" id="menu_ack_form"/>
+
+        <record model="ir.ui.view" id="ack_plan_view_form">
+            <field name="model">ack.plan</field>
+            <field name="type">form</field>
+            <field name="name">ack_plan_form</field>
+        </record>
+        <record model="ir.ui.view" id="ack_plan_view_list">
+            <field name="model">ack.plan</field>
+            <field name="type">tree</field>
+            <field name="name">ack_plan_list</field>
+        </record>
+        <!-- acciones -->
+        <record model="ir.action.act_window" id="act_ack_plan_form">
+            <field name="name">Plan_Trabajo</field>
+            <field name="res_model">ack.plan</field>
+        </record>
+        <record model="ir.action.act_window.view" id="act_ack_plan_form_view1">
+            <field name="sequence" eval="10"/>
+            <field name="view" ref="ack_plan_view_list"/>
+            <field name="act_window" ref="act_ack_plan_form"/>
+        </record>
+        <record model="ir.action.act_window.view" id="act_ack_plan_form_view2">
+            <field name="sequence" eval="20"/>
+            <field name="view" ref="ack_plan_view_form"/>
+            <field name="act_window" ref="act_ack_plan_form"/>
+        </record>
+        <menuitem parent="menu_ack" action="act_ack_plan_form" sequence="20" id="menu_ack_plan_form"/>
+
+        <!-- employee -->
+        <record model="ir.ui.view" id="ack_employee_view_form">
+            <field name="model">ack.employee</field>
+            <field name="type">form</field>
+            <field name="name">ack_employee_form</field>
+        </record>
+        <record model="ir.ui.view" id="ack_employee_view_list">
+            <field name="model">ack.employee</field>
+            <field name="type">tree</field>
+            <field name="name">ack_employee_list</field>
+        </record>
+        <!-- acciones -->
+        <record model="ir.action.act_window" id="act_ack_employee_form">
+            <field name="name">Empleados</field>
+            <field name="res_model">ack.employee</field>
+        </record>
+        <record model="ir.action.act_window.view" id="act_ack_employee_form_view1">
+            <field name="sequence" eval="10"/>
+            <field name="view" ref="ack_employee_view_list"/>
+            <field name="act_window" ref="act_ack_employee_form"/>
+        </record>
+        <record model="ir.action.act_window.view" id="act_ack_employee_form_view2">
+            <field name="sequence" eval="20"/>
+            <field name="view" ref="ack_employee_view_form"/>
+            <field name="act_window" ref="act_ack_employee_form"/>
+        </record>
+        <menuitem parent="menu_ack" action="act_ack_employee_form" sequence="30" id="menu_ack_employee_form"/>
+    </data>
+</tryton>

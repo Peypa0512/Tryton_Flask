@@ -1,0 +1,27 @@
+<?xml version="1.0" ?>
+<form>
+    <label name="cliente"/>
+    <field name="cliente"/>
+    <label name="tecnico"/>
+    <field name="tecnico"/>
+    <label name="nombre"/>
+    <field name="nombre"/>
+    <label name="tipo"/>
+    <field name="tipo"/>
+    <label name="prioridad"/>
+    <field name="prioridad"/>
+    <label name="tiempo"/>
+    <field name="tiempo"/>
+    <label name="dedicacion"/>
+    <field name="dedicacion"/>
+    <label name="estado"/>
+    <field name="estado"/>
+    <label name="from_date"/>
+    <field name="from_date"/>
+    <label name="from_hour"/>
+    <field name="from_hour"/>
+    <label name="to_date"/>
+    <field name="to_date"/>
+    <label name="to_hour"/>
+    <field name="to_hour"/>
+</form>

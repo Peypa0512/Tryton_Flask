@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="row g-0 w-100">
+    <div class="col-12">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Cliente</th>
+                    <th>Empleado</th>
+                    <th>Nombre</th>
+                    <th>Planificación</th>
+                    <th>Tipo</th>
+                    <th>Prioridad</th>
+                    <th>Tiempo</th>
+                    <th>Dedicación</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for client in lines %}
+                    <tr>
+                        <td colspan="7">{{ client.cliente }}</td>
+                    </tr>
+                    {% for employee in client.tecnico%}
+					<tr>
+						<td></td>
+
+						<td colspan="8">{{ employee.tecnico }}</td>
+					</tr>
+                        {% set index = 1 %}
+                        {% for allocation in employee.enlaces %}
+
+                            <tr id="row_{{ index}}">
+                                <td></td>
+                                <td></td>
+                                <td>
+                                    <a href="/events?event_param={{ loop.index }}" class="text-reset text-decoration-none">
+                                        <span class="work-name-span" valuestyle="cursor:pointer;">{{ allocation.nombre }}</span>
+                                    </a>
+                                </td>
+                            {% set index = index + 1 %}
+                            {% endfor %}
+                                <td> {{ employee.from_date}}-{{employee.from_hour }} - {{employee.to_date}}-{{employee.to_hour }} </td>
+                                <td>{{ employee.tipo}}</td>
+                                <td>{{ employee.prioridad}}</td>
+                                <td>{{ employee.time }}</td>
+                                <td>{{ employee.dedicacion}}</td>
+                                <td>{{ employee.estado }}</td>
+                            </tr>
+
+                    {% endfor %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock body  %}

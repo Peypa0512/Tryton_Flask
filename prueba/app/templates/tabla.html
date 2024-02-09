@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/work-plan.css') }}">
+{% endblock head %}
+{% block body %}
+
+<div class="row g-0 w-100">
+    <div class="col-12">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Cliente</th>
+                    <th>Empleado</th>
+                    <th>Nombre</th>
+                    <th>Planificación</th>
+                    <th>Tipo</th>
+                    <th>Prioridad</th>
+                    <th>Tiempo</th>
+                    <th>Dedicación</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for project in datos_procesados %}
+                    <tr>
+                        <td colspan="7">{{ project.cliente }}</td>
+                    </tr>
+                    {% for employee, allocations in datos_procesados[project].items() %}
+                        {% for allocation in allocations %}
+                            <tr>
+                                <td>{{ allocation.tecnico }}</td>
+                                <td>{{ allocation.nombre }}</td>
+                                <td>{{ allocation.from_date, "  ", allocation.from_hour,"    ", allocation.to_date,
+									"  ", allocation.to_hour}}</td>
+                                <td>{{ allocation.tipo }}</td>
+                                <td>{{ allocation.prioridad }}</td>
+                                <td>{{ allocation.tiempo }}</td>
+                                <td>{{ allocation.dedicacion }}</td>
+                                <td>{{ allocation.estado }}</td>
+                            </tr>
+                        {% endfor %}
+                    {% endfor %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<% endblock body  %}
