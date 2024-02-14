@@ -93,7 +93,9 @@
 						<th scope="col">Descripción</th>
 						<th scope="col">Conforme</th>
 						<th scope="col">Observación</th>
+						<th scope="col">Más observaciones</th>
 						<th scope="col">Nombre</th>
+
 						{% if g.employee %}
 						<th id="edit-btn-head" scope="col">Ver/Editar</th>
 						{% endif %}
@@ -130,6 +132,7 @@
 										{{line.comentario}}
 									{% endif %}
 								</td>
+								<td id="line_commentBox_{{ line.id }}"></td>
 								<td id="line_name">
 									<a href="/events?event_param={{ line.id }}">
 									[EP] En proceso</a></td>
@@ -267,11 +270,24 @@
 	});
 
 
-	// function para botones
-
+	// funcion solo muestra mensaje
 function showCommentBoxYes(lineId, buttonId) {
+    var commentContainer = document.getElementById('line_commentBox_' + lineId);
+    commentContainer.innerText = "OK, está de acuerdo con lo realizado";
+}
+function showCommentBoxNo(lineId, buttonId) {
+	var commentContainer = document.getElementById('line_commentBox_' + lineId);
+    var comment = prompt("Por favor, ingrese un comentario:");
+    commentContainer.innerText = comment;
+}
+
+	// function para botones para guardar en bbdd
+
+function showCommentBoxYes_2(lineId, buttonId) {
     console.log(buttonId);
     console.log("Función showCommentBoxYes llamada para la línea ID:", lineId);
+    var commentContainer = document.getElementById('line_commentBox_' + lineId);
+    commentContainer.innerText = "OK, está de acuerdo con lo realizado";
     var yesRadioButton = document.getElementById(buttonId);
     var yesChecked = yesRadioButton.checked;
     console.log("¿El botón 'Sí' está marcado?", yesChecked);
@@ -326,10 +342,13 @@ function handleServerResponse(response) {
 
 
 
-function showCommentBoxNo(lineId, buttonId) {
+function showCommentBoxNo2(lineId, buttonId) {
+
 	var noRadioButton = document.getElementById(buttonId);
     var noChecked = noRadioButton.checked;
     var comment = prompt("Por favor, ingrese un comentario:");
+    var commentContainer = document.getElementById('line_commentBox_' + lineId);
+    commentContainer.innerText = comment;
     if (comment !== null) {
         var requestData = {
             lineId: lineId,

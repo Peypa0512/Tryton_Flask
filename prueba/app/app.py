@@ -26,26 +26,38 @@ def hola2():
     return render_template('exportar3.html', lines=registros_prueba, employee=registros_employee)
 
 
+# Método de impresión inmediata botonera
 @app.route('/commentBox', methods=['POST'])
-@tryton.transaction()
 def commentBox():
-
-    #pdb.set_trace()
     data = request.get_json()
-    lineId = data.get('lineId')
-    yesChecked = data.get('yesChecked')
-    noChecked = data.get('noChecked')
     comment = data.get('comment')
+    print(comment)
+    return render_template('exportar3.html', comentarios=comment)
 
-    # Añadir el comentario a la lista
-    prueba_record = Prueba(lineId)
 
-    # Actualizar el campo de comentario del registro
-    prueba_record.comentario = comment
+ # Metodo ingreso en bbdd de botonera
 
-    # Guardar los cambios en la base de datos
-    prueba_record.save()
-    return jsonify({'success': True})
+
+# @app.route('/commentBox', methods=['POST'])
+# @tryton.transaction()
+# def commentBox():
+#
+#     #pdb.set_trace()
+#     data = request.get_json()
+#     lineId = data.get('lineId')
+#     yesChecked = data.get('yesChecked')
+#     noChecked = data.get('noChecked')
+#     comment = data.get('comment')
+#
+#     # Añadir el comentario a la lista
+#     prueba_record = Prueba(lineId)
+#
+#     # Actualizar el campo de comentario del registro
+#     prueba_record.comentario = comment
+#
+#     # Guardar los cambios en la base de datos
+#     prueba_record.save()
+#     return jsonify({'success': True})
 
 @app.route('/events')
 @tryton.transaction()
