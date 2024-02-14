@@ -1,8 +1,8 @@
 from flask import Flask, render_template, request, send_file, jsonify, json, Response, url_for, redirect
 from flask_tryton import Tryton
 import json
-from flask_cors import CORS
-import pandas as pd
+
+
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 import pdb
@@ -10,63 +10,43 @@ from datetime import datetime, timedelta
 
 
 app = Flask(__name__)
-CORS(app)
+
 app.config['TRYTON_DATABASE'] = 'prueba'
 tryton = Tryton(app, configure_jinja=True)
 Prueba = tryton.pool.get('ack.prueba')
 Plan = tryton.pool.get('ack.plan')
 Employee = tryton.pool.get('ack.employee')
 
-@app.route('/1')
+@app.route('/')
 @tryton.transaction()
 def hola2():
     registros_prueba = Prueba.search([])
     registros_employee = Employee.search([])
-    print(registros_employee)
+
     return render_template('exportar3.html', lines=registros_prueba, employee=registros_employee)
 
-@app.route('/')
+
+@app.route('/commentBox', methods=['POST'])
 @tryton.transaction()
-def hola():
+def commentBox():
 
-    plan_prueba = Plan.search([])
+    #pdb.set_trace()
+    data = request.get_json()
+    lineId = data.get('lineId')
+    yesChecked = data.get('yesChecked')
+    noChecked = data.get('noChecked')
+    comment = data.get('comment')
 
-    lines = []
-    for plan in plan_prueba:
-        client = {'cliente': plan.cliente, 'tecnico': []}
-        technician_names = plan.tecnico.split(',')
+    # Añadir el comentario a la lista
+    prueba_record = Prueba(lineId)
 
-        for technician in technician_names:
-            # employee = {'tecnico': technician, 'enlaces': []}
-            # plan_names = plan.nombre.split(',')
-            employee = {
-                'tecnico': technician,
-                'enlaces': [],
-                'from_date': plan.from_date,
-                'from_hour': plan.from_hour,
-                'to_date': plan.to_date,
-                'to_hour': plan.to_hour,
-                'tipo': plan.tipo,
-                'time': plan.tiempo,
-                'prioridad': plan.prioridad,
-                'dedicacion': plan.dedicacion,
-                'estado': plan.estado
-            }
-            plan_names = plan.nombre.split(',')
-            for allocation in plan_names:
-                employee['enlaces'].append({'id': plan.id, 'nombre': allocation})
-            client['tecnico'].append(employee)
+    # Actualizar el campo de comentario del registro
+    prueba_record.comentario = comment
 
-        lines.append(client)
-        print(lines)
+    # Guardar los cambios en la base de datos
+    prueba_record.save()
+    return jsonify({'success': True})
 
-    return render_template('exportar3.html', lines=lines)
-
-
-
-
-
-# @app.route('/api/calendar/events/<record("company.employee"):employee>')
 @app.route('/events')
 @tryton.transaction()
 # @login_required
@@ -76,7 +56,7 @@ def calendar_duplicated():
     if prueba_id:
         recoger_id = Prueba.browse([prueba_id])
         all_tecnicos = Prueba.search([])
-        return render_template('event2_old.html', prueba=recoger_id, tecnicos= all_tecnicos)
+        return render_template('event.html', prueba=recoger_id, tecnicos= all_tecnicos)
     else:
         return 'algo salio mal.....'
 
@@ -118,7 +98,7 @@ def procesar_duplicacion():
             plan.tiempo = time_delta
             plan.dedicacion = '-'
             plan.estado = duplicados.get('estado', '')
-            print(plan)
+
             plan.save()
 
             # enviamos todos los registros....
@@ -164,8 +144,6 @@ def excelExport():
         resultado = ' '.join(tildes.get(palabra.lower(), palabra) for palabra in palabras)
         return resultado
 
-
-
     try:
         # Cargar datos JSON
 
@@ -174,7 +152,7 @@ def excelExport():
         print("Error al decodificar JSON:", str(e))
         return "Error al decodificar JSON"
 
-        print(datos)
+
     dataframes = []
     diccionario_combinado = {}
     # Asegúrate de que hay datos y al menos un diccionario en la lista
@@ -256,5 +234,6 @@ def excelExport():
         return send_file('datos_formato.xlsx', as_attachment=True)
     else:
         return "Datos no válidos"
+
 if __name__ == '__main__':
     app.run(debug=True)

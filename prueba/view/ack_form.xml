@@ -16,6 +16,8 @@
     <field name="tarea"/>
     <label name="descripcion"/>
     <field name="descripcion"/>
+    <label name="comentario"/>
+    <field name="comentario"/>
     <label name="editor_ver"/>
     <field name="editor_ver"/>
 </form>

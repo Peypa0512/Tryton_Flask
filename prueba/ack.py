@@ -13,6 +13,7 @@ class Prueba(ModelSQL, ModelView):
     cliente = fields.Char('Cliente')
     tarea = fields.Char('Tarea')
     descripcion = fields.Text('Descripcion')
+    comentario = fields.Text('Observaciones')
     editor_ver = fields.Char('Editar/Ver')
 
 class Plan_trabajo(ModelSQL, ModelView):

@@ -1,4 +1,15 @@
-{% extends "base.html" %} {% block body %}
+{% extends "base.html" %}
+{% block head %}
+<style>
+  .custom-radio {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+</style>
+{% endblock head %}
+{% block body %}
+
 <div class="row g-0 w-100 mt-4">
 		<form id="filterTimesheetLines">
 			<div class="col-12 row">
@@ -81,6 +92,7 @@
 						<th id="work-head" scope="col">Tarea</th>
 						<th scope="col">Descripción</th>
 						<th scope="col">Conforme</th>
+						<th scope="col">Observación</th>
 						<th scope="col">Nombre</th>
 						{% if g.employee %}
 						<th id="edit-btn-head" scope="col">Ver/Editar</th>
@@ -103,14 +115,21 @@
 								<td id="line_work" >{{ line.tarea }}</td>
 								<td id="line_description">{{ line.descripcion }}</td>
 								<!-- aqui van los radio button -->
-								<td id="line_according_{{ line.id }}">
-									<input type="radio" id="yes_{{ line.id }}" name="conforme_{{ line.id }}" value="yes">
-									<label for="yes_{{ line.id }}">S</label>
-									<input type="radio" id="no_{{ line.id }}" name="conforme_{{ line.id }}" value="no">
-									<label for="no_{{ line.id }}">N</label>
-									<textarea id="reason_{{ line.id }}" name="reason_{{ line.id }}" style="display: none;"></textarea>
+								<td id="line_according_{{ line.id }}" >
+									<div class="custom-radio">
+										<label for="yes_{{ line.id }}" style="margin-right: 10px;">S</label>
+										<label for="no_{{ line.id }}" style="margin-right: 5px;">N</label>
+									</div>
+									<div class="custom-radio" style="margin-top: 10px;">
+										<input type="radio" id="yes_{{ line.id }}" style="margin-right: 10px;" name="conforme_{{ line.id }}" value="yes" onclick="showCommentBoxYes('{{ line.id }}', this.id)">
+										<input type="radio" id="no_{{ line.id }}" style="margin-right: 5px;" name="conforme_{{ line.id }}" value="no" onclick="showCommentBoxNo('{{ line.id }}', this.id)">
+									</div>
 								</td>
-
+								<td id="line_commentBox" >
+									{% if line.comentario %}
+										{{line.comentario}}
+									{% endif %}
+								</td>
 								<td id="line_name">
 									<a href="/events?event_param={{ line.id }}">
 									[EP] En proceso</a></td>
@@ -248,23 +267,94 @@
 	});
 
 
-	// textArea de radio button 'N'
-	document.addEventListener("DOMContentLoaded", function() {
-		// Obtén la lista de todas las líneas
-		var lines = document.querySelectorAll('[id^="line_according_"]');
+	// function para botones
 
-		// Itera sobre cada línea
-		lines.forEach(function(line) {
-			var noRadioButton = line.querySelector('[id^="no_"]');
-			var reasonTextArea = line.querySelector('[id^="reason_"]');
+function showCommentBoxYes(lineId, buttonId) {
+    console.log(buttonId);
+    console.log("Función showCommentBoxYes llamada para la línea ID:", lineId);
+    var yesRadioButton = document.getElementById(buttonId);
+    var yesChecked = yesRadioButton.checked;
+    console.log("¿El botón 'Sí' está marcado?", yesChecked);
 
-			// Agrega un evento click al radio button "No" de cada línea
-			noRadioButton.addEventListener("click", function() {
-				// Si se selecciona "No", muestra el textarea; de lo contrario, ocúltalo
-				reasonTextArea.style.display = this.checked ? "block" : "none";
-			});
-		});
-	});
+    // Crear un objeto con los datos que se enviarán al servidor
+    var requestData = {
+        lineId: lineId,
+        comment: "OK, está de acuerdo con lo realizado"
+    };
+
+    // Enviar la solicitud al servidor y manejar la respuesta
+    sendRequest("/commentBox", requestData)
+        .then(function(response) {
+            if (response.success) {
+                // Actualizar la tabla
+                updateTable();  // Implementa esta función para actualizar la tabla
+            } else {
+                console.error("Error al actualizar la tabla");
+            }
+        })
+        .catch(function (error) {
+            console.error("Error al enviar la solicitud:", error);
+        });
+}
+
+function sendRequest(url, data) {
+    return new Promise(function (resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", url, true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    resolve(xhr.responseText);
+                    window.location.reload();
+                } else {
+                    reject(xhr.statusText);
+                }
+            }
+        };
+        xhr.send(JSON.stringify(data));
+    });
+
+}
+
+function handleServerResponse(response) {
+    // Actualizar el DOM con la respuesta del servidor
+    console.log("Respuesta del servidor:", response);
+    // Aquí puedes manipular el DOM según la respuesta recibida
+
+}
+
+
+
+function showCommentBoxNo(lineId, buttonId) {
+	var noRadioButton = document.getElementById(buttonId);
+    var noChecked = noRadioButton.checked;
+    var comment = prompt("Por favor, ingrese un comentario:");
+    if (comment !== null) {
+        var requestData = {
+            lineId: lineId,
+            text: "NO",
+            comment: comment  // Guardar el comentario en los datos a enviar
+        };
+
+        // Realizar una solicitud AJAX para enviar los datos al servidor Flask
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "/commentBox", true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                // Manejar la respuesta del servidor si es necesario
+                console.log("Respuesta del servidor:", xhr.responseText);
+                window.location.reload();
+            }
+        };
+
+        // Enviar los datos al servidor
+        xhr.send(JSON.stringify(requestData));
+    }
+
+}
+
 
 </script>
 

@@ -8,5 +8,6 @@
     <field name="cliente"/>
     <field name="tarea"/>
     <field name="descripcion"/>
+    <field name="comentario"/>
     <field name="editor_ver"/>
 </tree>
